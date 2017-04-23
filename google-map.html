@@ -1,10 +1,8 @@
 <!-- Copyright (c) 2015 Google Inc. All rights reserved. -->
 
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../google-apis/google-maps-api.html">
 <link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="../iron-selector/iron-selector.html">
-<link rel="import" href="google-map-marker.html">
 
 <!--
 The `google-map` element renders a Google Map.
@@ -452,7 +450,24 @@ If you're seeing the message "You have included the Google Maps API multiple tim
       ],
 
       attached: function() {
-        this._initGMap();
+        var options = {
+          rootMargin: '250px',
+          threshold: [0.25]
+        }
+        var self = this;
+        var callback = function(entries, observer) {
+          if (entries[0].isIntersecting) {
+            self.importHref(self.resolveUrl('../google-apis/google-maps-api.html'), function() {
+              self.importHref(self.resolveUrl('./google-map-marker.html'), function() {
+                self._initGMap();
+              });
+            });
+          }
+        };
+        var observer = new IntersectionObserver(callback, options);
+        this.async(function() {
+          observer.observe(self);
+        });
       },
 
       detached: function() {
