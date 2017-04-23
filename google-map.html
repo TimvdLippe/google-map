@@ -450,6 +450,30 @@ If you're seeing the message "You have included the Google Maps API multiple tim
       ],
 
       attached: function() {
+        if ('IntersectionObserver' in window) {
+          this.lazyLoadMap();
+        } else {
+          var self = this;
+          self.importHref(self.resolveUrl('../google-apis/google-maps-api.html'), function() {
+            self.importHref(self.resolveUrl('./google-map-marker.html'), function() {
+              self._initGMap();
+            });
+          });
+        }
+      },
+
+      detached: function() {
+        if (this._markersChildrenListener) {
+          this.unlisten(this.$.selector, 'items-changed', '_updateMarkers');
+          this._markersChildrenListener = null;
+        }
+        if (this._objectsMutationObserver) {
+          this._objectsMutationObserver.disconnect();
+          this._objectsMutationObserver = null;
+        }
+      },
+
+      lazyLoadMap: function() {
         var options = {
           rootMargin: '250px',
           threshold: [0.25]
@@ -468,17 +492,6 @@ If you're seeing the message "You have included the Google Maps API multiple tim
         this.async(function() {
           observer.observe(self);
         });
-      },
-
-      detached: function() {
-        if (this._markersChildrenListener) {
-          this.unlisten(this.$.selector, 'items-changed', '_updateMarkers');
-          this._markersChildrenListener = null;
-        }
-        if (this._objectsMutationObserver) {
-          this._objectsMutationObserver.disconnect();
-          this._objectsMutationObserver = null;
-        }
       },
 
       _initGMap: function() {
